@@ -7,7 +7,65 @@ This lets me do two things:
 1. Use VSCode tasks to run my code with an arbitrary number of processes.
 2. Create pretty output without too much (read: any) work.
 
+## Scripts
+
+* `run.sh` - Finds all source files in the project, compiles, and runs them. 
+Used by the VSCode task. Takes the number of processes as an argument.
+* `package.sh` - Collects all source files in the project, collapses the 
+structure (moves `src/...` includes to just `...`), and zips it with the
+`packageRun.sh` script.
+* `packageRun.sh` turns into the `run.sh` script in the packaged project.
+Takes the number of processes as an argument.
+
 ## Examples
+
+### Random Numbers (Default Source)
+
+**C++**
+```cpp
+#include "src/mpiu.hpp"
+
+int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MCW, &rank);
+    MPI_Comm_size(MCW, &size);
+
+    srand(rank);
+    // Try changing this variable's name.
+    int random_process_data = (rand() % (size*100));
+
+    debugh("Random Table");
+    debugt(random_process_data);
+
+    MPI_Finalize();
+}
+
+```
+
+**Output (8 processes):**
+```
+Random Table
+┌───────────────────────────────────────────────┐
+│              random_process_data              │
+├─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┤
+│  0  │  1  │  2  │  3  │  4  │  5  │  6  │  7  │
+├─────┼─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+│ 583 │ 583 │  90 │ 346 │ 701 │ 475 │ 541 │ 277 │
+└─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘
+```
+
+**Output (16 processes):**
+```
+Random Table
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                              random_process_data                                              │
+├──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┤
+│   0  │   1  │   2  │   3  │   4  │   5  │   6  │   7  │   8  │   9  │  10  │  11  │  12  │  13  │  14  │  15  │
+├──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ 1383 │ 1383 │  890 │ 1146 │ 1501 │  475 │ 1341 │ 1077 │  696 │  515 │  495 │ 1023 │ 1360 │  490 │  283 │ 1493 │
+└──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+```
 
 ### Bitonic Sorting
 
