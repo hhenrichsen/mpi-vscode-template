@@ -1,0 +1,9 @@
+{
+    "configurations": [
+        {
+            "name": "MPI",
+            "compilerPath": "/usr/bin/mpic++"
+        }
+    ],
+    "version": 4
+}

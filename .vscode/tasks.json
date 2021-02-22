@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build and Run", 
+            "type": "shell", 
+            "command": "./scripts/run.sh",
+            "args": [ "${input:np}" ],
+            "group": {
+                "kind": "build", 
+                "isDefault": true
+            },
+            "presentation": { 
+                "echo": false,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "clear": false,
+                "showReuseMessage": false
+            },
+            "problemMatcher": "$gcc"
+        },
+    ],
+    "inputs": [
+        {
+            "id": "np",
+            "type": "promptString",
+            "description": "Number of Processes to run with",
+            "default": "8"
+        }
+    ]
+}
