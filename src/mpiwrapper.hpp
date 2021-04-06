@@ -279,7 +279,7 @@ public:
      */
     template<typename T>
     T receiveTagged(const int& tag, MPI_Status*& status) {
-        return receive<T>((const int&) MPI_ANY_SOURCE, tag, status);
+        return receive<T>(MPI_ANY_SOURCE, tag, status);
     }
 
     /**
@@ -293,7 +293,7 @@ public:
      */
     template<typename T>
     T receiveTagged(const int& tag) {
-        return receive<T>((const int&) MPI_ANY_SOURCE, tag, lastStatus);
+        return receive<T>(MPI_ANY_SOURCE, tag, lastStatus);
     }
 
     /**
@@ -345,7 +345,7 @@ public:
      */
     template<typename T>
     T* receiveMultipleTagged(const int& count, const int& tag, MPI_Status*& status) {
-        return receiveMultiple<T>(count, (const int&) MPI_ANY_SOURCE, tag, status);
+        return receiveMultiple<T>(count, MPI_ANY_SOURCE, tag, status);
     }
 
     /**
@@ -360,7 +360,7 @@ public:
      */
     template<typename T>
     T* receiveMultipleTagged(const int& count, const int& tag) {
-        return receiveMultiple<T>(count, (const int&) MPI_ANY_SOURCE, tag, lastStatus);
+        return receiveMultiple<T>(count, MPI_ANY_SOURCE, tag, lastStatus);
     }
 
     /**
