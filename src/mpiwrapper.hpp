@@ -21,7 +21,7 @@ private:
     int size;
     int rank;
     int scopes = 1;
-    std::function<bool (MPIWrapper*)> work_fn;
+    std::function<bool (MPIWrapper)> work_fn;
     MPI_Status* lastStatus;
 
     void updateStatus(MPI_Status* other); 
@@ -141,49 +141,109 @@ public:
     bool hasData(int source, int tag, MPI_Status* status);
 
     /**
-     * Prints data from each process in an ordered tabular format. Uses a
+     * Prints a value from each process in an ordered tabular format. Uses a
      * reduce behind the scenes.
      * 
-     * @param data The data to insert into the table.
+     * @param value The value to insert into the table.
      * @param name The header to place at the top of the table.
      * @param T The MPI-supported type to put in the table.
      */
     template <typename T>
-    void table(T data, std::string name) {
-        debug_table<T>(this->rank, this->size, name, data);
+    void table(T value, std::string name) {
+        debug_table<T>(this->rank, this->size, name, value);
     }
 
+    /**
+     * Sends a value from one process to another.
+     * 
+     * @param value The value to send to the specified process.
+     * @param destination The rank of the specified process.
+     * @param tag The tag to send the value with. Defaults to 0.
+     * @param T The MPI-supported type to send.
+     */
     template<typename T>
-    void send(const T& data, const int& destination, const int& tag=0) {
-        T tmp = data;
+    void send(const T& value, const int& destination, const int& tag=0) {
+        T tmp = value;
         MPI_Send(&tmp, 1, mpi_type<T>::get(), destination, tag, this->world);
     }
 
+    /**
+     * Sends a value to the next process using a ring topology.
+     * 
+     * @param value The value to send to the next process.
+     * @param tag The tag to send the value with. Defaults to 0.
+     * @param T The MPI-supported type to send.
+     */
     template<typename T>
-    void sendRing(const T& data, const int& tag=0) {
-        send<T>(data, getNextRank(), tag);
+    void sendRing(const T& value, const int& tag=0) {
+        send<T>(value, getNextRank(), tag);
     }
 
+    /**
+     * Sends a value from one process to another in a cube topology.
+     * 
+     * @param value The value to send to the next process.
+     * @param dimension The cube dimension to send value along.
+     * @param tag The tag to send the value with. Defaults to 0.
+     * @param T The MPI-supported type to send.
+     */
     template<typename T>
-    void sendCube(const T& data, const int& dimension, const int& tag=0) {
-        send<T>(data, getCubeRank(dimension), tag);
+    void sendCube(const T& value, const int& dimension, const int& tag=0) {
+        send<T>(value, getCubeRank(dimension), tag);
     }
 
+    /**
+     * Sends values from one process to another.
+     * 
+     * @param values The values to send to the next process.
+     * @param count The number of values being sent.
+     * @param destination The rank of the specified process.
+     * @param tag The tag to send the value with. Defaults to 0.
+     * @param T The MPI-supported type to send.
+     */
     template<typename T>
-    void sendMultiple(const T* data, const int& count, const int& destination, const int& tag=0) {
-        MPI_Send(&data, count, mpi_type<T>::get(), destination, tag, this->world);
+    void sendMultiple(const T* values, const int& count, const int& destination, const int& tag=0) {
+        MPI_Send(&values, count, mpi_type<T>::get(), destination, tag, this->world);
     }
 
+    /**
+     * Sends values from one process to another in a ring topology.
+     * 
+     * @param values The values to send to the next process.
+     * @param count The number of values being sent.
+     * @param tag The tag to send the value with. Defaults to 0.
+     * @param T The MPI-supported type to send.
+     */
     template<typename T>
-    void sendMultipleRing(const T* data, const int& count, const int& tag=0) {
-        sendMultiple<T>(data, count, getNextRank(), tag);
+    void sendMultipleRing(const T* values, const int& count, const int& tag=0) {
+        sendMultiple<T>(values, count, getNextRank(), tag);
     }
 
+    /**
+     * Sends values from one process to another in a cube topology.
+     * 
+     * @param values The values to send to the next process.
+     * @param count The number of values being sent.
+     * @param dimension The cube dimension to send value along.
+     * @param tag The tag to send the value with. Defaults to 0.
+     * @param T The MPI-supported type to send.
+     */
     template<typename T>
-    void sendMultipleCube(const T* data, const int& count, const int& dimension, const int& tag=0) {
-        sendMultiple<T>(&data, count, mpi_type<T>::get(), getCubeRank(dimension), tag, this->world);
+    void sendMultipleCube(const T* values, const int& count, const int& dimension, const int& tag=0) {
+        sendMultiple<T>(&values, count, mpi_type<T>::get(), getCubeRank(dimension), tag, this->world);
     }
 
+    /**
+     * Receives a value from the given source with the given tag and returns
+     * it, placing the status in the given status.
+     * 
+     * @param source The source to receive the value from.
+     * @param tag The tag that the received value must match.
+     * @param status The status reference to place the status in.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T receive(const int& source, const int& tag, MPI_Status*& status) {
         T tmp;
@@ -192,21 +252,62 @@ public:
         return tmp;
     }
 
+    /**
+     * Receives a value from the given source with the given tag and returns
+     * it.
+     * 
+     * @param source The source to receive the value from. Defaults to allow any.
+     * @param tag The tag that the received value must match. Defaults to allow any.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T receive(const int& source=MPI_ANY_SOURCE, const int& tag=MPI_ANY_TAG) {
         return receive<T>(source, tag, lastStatus);
     }
 
+    /**
+     * Receives a value from the given source with the given tag and returns
+     * it, placing the status in the given status.
+     * 
+     * @param tag The tag that the received value must match.
+     * @param status The status reference to place the status in.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T receiveTagged(const int& tag, MPI_Status*& status) {
         return receive<T>((const int&) MPI_ANY_SOURCE, tag, status);
     }
 
+    /**
+     * Receives a value from the given source with the given tag and returns
+     * it.
+     * 
+     * @param tag The tag that the received value must match.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T receiveTagged(const int& tag) {
         return receive<T>((const int&) MPI_ANY_SOURCE, tag, lastStatus);
     }
 
+    /**
+     * Receives multiple value from the given source with the given tag and
+     * returns it, placing the status in the given status.
+     * 
+     * @param count The number of values to receive.
+     * @param source The source to receive the value from.
+     * @param tag The tag that the received value must match.
+     * @param status The status reference to place the status in.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T* receiveMultiple(const int& count, const int& source, const int& tag, MPI_Status*& status) {
         T* tmp = new T[count];
@@ -215,31 +316,86 @@ public:
         return tmp;
     }
 
+    /**
+     * Receives multiple value from the given source with the given tag and
+     * returns it.
+     * 
+     * @param count The number of values to receive.
+     * @param source The source to receive the value from. Defaults to allow any.
+     * @param tag The tag that the received value must match. Defaults to allow any.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T* receiveMultiple(const int& count, const int& source=MPI_ANY_SOURCE, const int& tag=MPI_ANY_TAG) {
         return receiveMultiple<T>(count, source, tag, lastStatus);
     }
 
+    /**
+     * Receives multiple value from the given source with the given tag and
+     * returns it, placing the status in the given status.
+     * 
+     * @param count The number of values to receive.
+     * @param tag The tag that the received value must match.
+     * @param status The status reference to place the status in.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T* receiveMultipleTagged(const int& count, const int& tag, MPI_Status*& status) {
         return receiveMultiple<T>(count, (const int&) MPI_ANY_SOURCE, tag, status);
     }
 
+    /**
+     * Receives multiple value from the given source with the given tag and
+     * returns it.
+     * 
+     * @param count The number of values to receive.
+     * @param tag The tag that the received value must match. Defaults to allow any.
+     * @param T The MPI-supported type to receive.
+     * 
+     * @return The value that was received.
+     */
     template<typename T>
     T* receiveMultipleTagged(const int& count, const int& tag) {
         return receiveMultiple<T>(count, (const int&) MPI_ANY_SOURCE, tag, lastStatus);
     }
 
-    // Status-related utilities
+    /**
+     * @returns The status from the last receive request.
+     */
     MPI_Status getLastStatus();
+
+    /**
+     * @returns The source of the last value received.
+     */
     int getLastSource();
+
+    /**
+     * @returns The tag of the last value received.
+     */
     int getLastTag();
 
-    // Functional work setup
+    /**
+     * Sets the work function. The wrapper will continue executing this
+     * function until it returns true.
+     * 
+     * @param work_fn The work function to set.
+     */
     void setWorkFunction(std::function<bool (MPIWrapper*)> work_fn);
+
+    /**
+     * Runs the work function, if it exists.
+     */
     void work();
 
-    // Printing
+    /**
+     * Sends a message with an attached process indicator.
+     * 
+     * @param message The message to send.
+     */
     void print(std::string message);
 };
 
