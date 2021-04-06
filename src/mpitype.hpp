@@ -4,12 +4,11 @@
 
 template<typename T> struct mpi_type
 {
-    // static const MPI_Datatype get() { static_assert(false, "Missing a MAKE_MPI_TYPE"); }
 };
 
 #define MAKE_MPI_TYPE(x, y) template<> struct mpi_type<x> { static const MPI_Datatype get() { return y; } }
 
-MAKE_MPI_TYPE(char, MPI_INT);
+MAKE_MPI_TYPE(char, MPI_CHAR);
 MAKE_MPI_TYPE(short, MPI_SHORT);
 MAKE_MPI_TYPE(int, MPI_INT);
 MAKE_MPI_TYPE(long, MPI_LONG);
