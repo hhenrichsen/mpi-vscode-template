@@ -2,7 +2,7 @@
 #include "src/mpitype.hpp"
 #include "src/mpiwrapper.hpp"
 
-void run(MPIWrapper wrapper) {
+bool run(MPIWrapper wrapper) {
     srand(wrapper.getRank() * 100);
     long send = rand() % (wrapper.getSize() * 100);
     wrapper.table<long>(send, "First");
@@ -15,9 +15,11 @@ void run(MPIWrapper wrapper) {
     wrapper.sendCube<long>(recv, 1);
     recv = wrapper.receive<long>();
     wrapper.table<long>(recv, "Fourth (1st Degree Cube)");
+    return true;
 }
 
 int main(int argc, char** argv) {
     MPIWrapper wrapper(argc, argv);
-    run(wrapper);
+    wrapper.setWorkFunction(run);
+    wrapper.work();
 }
