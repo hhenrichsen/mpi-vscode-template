@@ -384,7 +384,7 @@ public:
      * 
      * @param work_fn The work function to set.
      */
-    void setWorkFunction(std::function<bool (MPIWrapper*)> work_fn);
+    void setWorkFunction(std::function<bool (MPIWrapper)> work_fn);
 
     /**
      * Runs the work function, if it exists.

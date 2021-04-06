@@ -32,7 +32,7 @@ int MPIWrapper::getRank() {
     return this->rank;
 }
 
-int MPIWrapper::getCube(const int dimension) {
+int MPIWrapper::getCubeRank(const int dimension) {
     return (getRank() ^ (1 << dimension));
 }
 
@@ -94,15 +94,15 @@ int MPIWrapper::getLastTag() {
     return this->lastStatus->MPI_TAG;
 }
 
-void MPIWrapper::setWorkFunction(std::function<bool (MPIWrapper*)> fn) {
+void MPIWrapper::setWorkFunction(std::function<bool (MPIWrapper)> fn) {
     this->work_fn = fn;
 }
 
 void MPIWrapper::work() {
-    bool done = this->work_fn(this);
+    bool done = this->work_fn(*this);
     while (!done) {
         std::cout << "Iterating again..." << std::endl;
-        done = this->work_fn(this);
+        done = this->work_fn(*this);
     }
 }
 
