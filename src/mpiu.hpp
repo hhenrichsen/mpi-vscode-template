@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <functional>
+#include "mpitype.hpp"
 
 //
 // MPI Debug Macros
@@ -77,20 +78,6 @@ void debug_header(int rank, std::string header);
  * @param marker A message to be printed before the data.
  */
 void debug_print(int rank, int size, std::string name, const int data, std::string marker);
-
-/**
- * Similar to debug_print, except that it prints the data in a nice tabular 
- * format.
- * 
- * An alias debugt exists that automatically fills everything except the
- * variable name.
- * 
- * @param rank The rank of this process.
- * @param size The number of processes.
- * @param name The name of the data being displayed.
- * @param data The data being displayed.
- */
-void debug_table(int rank, int size, std::string name, const int data);
 
 /**
  * Finds the max value in an array of arbitrary size.
@@ -175,4 +162,40 @@ std::string string_times(std::string msg, int total);
 void print_table_row(std::string leftCap, std::string mid, std::string rightCap, 
 std::string fill_char, std::function<std::string (int)> provider, int size, int col_size);
 
-#endif
+/**
+ * Similar to debug_print, except that it prints the data in a nice tabular 
+ * format.
+ * 
+ * An alias debugt exists that automatically fills everything except the
+ * variable name.
+ * 
+ * @param rank The rank of this process.
+ * @param size The number of processes.
+ * @param name The name of the data being displayed.
+ * @param data The data being displayed.
+ */
+template <typename T>
+void debug_table(int rank, int size, std::string name, const T data) {
+    MPI_Barrier(MCW);
+    T* recv = new T[size];
+    MPI_Gather(&data, 1, mpi_type<T>::get(), recv, 1, mpi_type<T>::get(), 0, MCW);
+
+    int maxIdLen = std::log10(size-1);
+    int maxValLen = std::log10(max_val_in<T>(recv, size, 0));
+    int col_size = std::max(maxIdLen, maxValLen) + 3;
+    int totalLen = (1 + col_size) * size - 1;
+    if (rank == 0) {
+        print_table_row("┌", "─", "┐", "─", [](int i) -> std::string { return ""; }, size, col_size);
+        std::cout << "│" << center_string(name, totalLen) << "│" << std::endl;
+        print_table_row("├", "┬", "┤", "─", [](int i) -> std::string { return ""; }, size, col_size);
+        print_table_row("│", "│", "│", " ", [](int i) -> std::string { return std::to_string(i); }, size, col_size);
+        print_table_row("├", "┼", "┤", "─", [](int i) -> std::string { return ""; }, size, col_size);
+        print_table_row("│", "│", "│", " ", [recv](int i) -> std::string { return std::to_string(recv[i]); }, size, col_size);
+        print_table_row("└", "┴", "┘", "─", [](int i) -> std::string { return ""; }, size, col_size);
+    }
+
+    delete[] recv;
+    MPI_Barrier(MCW);
+}
+
+#endif // MPI_U_HPP

@@ -1,4 +1,5 @@
 #include "mpiu.hpp"
+#include "mpitype.hpp"
 #include <sstream>
 //
 // Various Debug-Printing options. 
@@ -69,41 +70,6 @@ void debug_print(int rank, int size, std::string name, const int data, std::stri
             filter_ios(i) << marker << i << " " << name << ": " << recv[i] << std::endl;
         }
     }
-    delete[] recv;
-    MPI_Barrier(MCW);
-}
-
-/**
- * Similar to debug_print, except that it prints the data in a nice tabular 
- * format.
- * 
- * An alias debugt exists that automatically fills everything except the
- * variable name.
- * 
- * @param rank The rank of this process.
- * @param size The number of processes.
- * @param name The name of the data being displayed.
- * @param data The data being displayed.
- */
-void debug_table(int rank, int size, std::string name, const int data) {
-    MPI_Barrier(MCW);
-    int* recv = new int[size];
-    MPI_Gather(&data, 1, MPI_INT, recv, 1, MPI_INT, 0, MCW);
-
-    int maxIdLen = std::log10(size-1);
-    int maxValLen = std::log10(max_val_in(recv, size, 0));
-    int col_size = std::max(maxIdLen, maxValLen) + 3;
-    int totalLen = (1 + col_size) * size - 1;
-    if (rank == 0) {
-        print_table_row("┌", "─", "┐", "─", [](int i) -> std::string { return ""; }, size, col_size);
-        std::cout << "│" << center_string(name, totalLen) << "│" << std::endl;
-        print_table_row("├", "┬", "┤", "─", [](int i) -> std::string { return ""; }, size, col_size);
-        print_table_row("│", "│", "│", " ", [](int i) -> std::string { return std::to_string(i); }, size, col_size);
-        print_table_row("├", "┼", "┤", "─", [](int i) -> std::string { return ""; }, size, col_size);
-        print_table_row("│", "│", "│", " ", [recv](int i) -> std::string { return std::to_string(recv[i]); }, size, col_size);
-        print_table_row("└", "┴", "┘", "─", [](int i) -> std::string { return ""; }, size, col_size);
-    }
-
     delete[] recv;
     MPI_Barrier(MCW);
 }
