@@ -8,13 +8,13 @@ void run(MPIWrapper wrapper) {
     wrapper.table<long>(send, "First");
     wrapper.sendRing<long>(send);
     long recv = wrapper.receive<long>();
-    wrapper.table<long>(recv, "Second");
-    wrapper.sendCube<long>(recv, 0);
-    recv = wrapper.receive<long>();
-    wrapper.table<long>(recv, "Third");
+    wrapper.table<long>(recv, "Second (Ring)");
+    wrapper.sendCube<long>(recv, 0, 1);
+    recv = wrapper.receiveTagged<long>(1);
+    wrapper.table<long>(recv, "Third (0th Degree Cube)");
     wrapper.sendCube<long>(recv, 1);
     recv = wrapper.receive<long>();
-    wrapper.table<long>(recv, "Fourth");
+    wrapper.table<long>(recv, "Fourth (1st Degree Cube)");
 }
 
 int main(int argc, char** argv) {

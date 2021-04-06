@@ -154,94 +154,34 @@ public:
     }
 
     template<typename T>
-    void send(const T& data, const int& destination, const int& tag) {
+    void send(const T& data, const int& destination, const int& tag=0) {
         T tmp = data;
         MPI_Send(&tmp, 1, mpi_type<T>::get(), destination, tag, this->world);
     }
 
     template<typename T>
-    void sendTagged(const T& data, const int& destination, const int& tag) {
-        send<T>(data, destination, tag);
-    }
-
-    template<typename T>
-    void send(const T& data, const int& destination) {
-        send<T>(data, destination, (const int&) 0);
-    }
-
-    template<typename T>
-    void sendRing(const T& data, const int& tag) {
+    void sendRing(const T& data, const int& tag=0) {
         send<T>(data, getNextRank(), tag);
     }
 
     template<typename T>
-    void sendRingTagged(const T& data, const int& tag) {
-        sendRing<T>(data, getNextRank(), tag);
-    }
-
-    template<typename T>
-    void sendRing(const T& data) {
-        sendRing<T>(data, (const int&) 0);
-    }
-
-    template<typename T>
-    void sendCube(const T& data, const int& dimension, const int& tag) {
+    void sendCube(const T& data, const int& dimension, const int& tag=0) {
         send<T>(data, getCubeRank(dimension), tag);
     }
 
     template<typename T>
-    void sendCubeTagged(const T& data, const int& dimension, const int& tag) {
-        sendCube<T>(data, dimension, tag);
-    }
-
-    template<typename T>
-    void sendCube(const T& data, const int& dimension) {
-        sendCube<T>(data, dimension, (const int&) 0);
-    }
-
-    template<typename T>
-    void sendMultiple(const T* data, const int& count, const int& destination, const int& tag) {
+    void sendMultiple(const T* data, const int& count, const int& destination, const int& tag=0) {
         MPI_Send(&data, count, mpi_type<T>::get(), destination, tag, this->world);
     }
 
     template<typename T>
-    void sendMultipleTagged(const T* data, const int& count, const int& destination, const int& tag) {
-        sendMultiple<T>(data, count, destination, tag);
-    }
-
-    template<typename T>
-    void sendMultiple(const T* data, const int& count, const int& destination) {
-        sendMultiple<T>(data, count, destination, (const int&) 0);
-    }
-
-    template<typename T>
-    void sendMultipleRing(const T* data, const int& count, const int& tag) {
+    void sendMultipleRing(const T* data, const int& count, const int& tag=0) {
         sendMultiple<T>(data, count, getNextRank(), tag);
     }
 
     template<typename T>
-    void sendMultipleRingTagged(const T* data, const int& count, const int& tag) {
-        sendMultipleRing<T>(data, count, tag);
-    }
-
-    template<typename T>
-    void sendMultipleRing(const T* data, const int& count) {
-        sendMultipleRing<T>(data, count, (const int&) 0);
-    }
-
-    template<typename T>
-    void sendMultipleCube(const T* data, const int& count, const int& dimension, const int& tag) {
+    void sendMultipleCube(const T* data, const int& count, const int& dimension, const int& tag=0) {
         sendMultiple<T>(&data, count, mpi_type<T>::get(), getCubeRank(dimension), tag, this->world);
-    }
-
-    template<typename T>
-    void sendMultipleCubeTagged(const T* data, const int& count, const int& dimension, const int& tag) {
-        sendMultipleCube<T>(data, count, dimension, tag);
-    }
-
-    template<typename T>
-    void sendMultipleCube(const T* data, const int& count, const int& dimension) {
-        sendMultipleCube<T>(data, count, dimension, (const int&) 0);
     }
 
     template<typename T>
@@ -253,28 +193,8 @@ public:
     }
 
     template<typename T>
-    T receive(const int& source, const int& tag) {
+    T receive(const int& source=MPI_ANY_SOURCE, const int& tag=MPI_ANY_TAG) {
         return receive<T>(source, tag, lastStatus);
-    }
-
-    template<typename T>
-    T receive(const int& source) {
-        return receive<T>(source, (const int&) MPI_ANY_TAG, lastStatus);
-    }
-
-    template<typename T>
-    T receive() {
-        return receive<T>((const int&) MPI_ANY_SOURCE, (const int&) MPI_ANY_TAG, lastStatus);
-    }
-
-    template<typename T>
-    T receiveFrom(const int& source, MPI_Status*& status) {
-        return receive<T>(source, (const int&) MPI_ANY_TAG, status);
-    }
-
-    template<typename T>
-    T receiveFrom(const int& source) {
-        return receive<T>(source, (const int&) MPI_ANY_TAG, lastStatus);
     }
 
     template<typename T>
@@ -296,28 +216,8 @@ public:
     }
 
     template<typename T>
-    T* receiveMultiple(const int& count, const int& source, const int& tag) {
+    T* receiveMultiple(const int& count, const int& source=MPI_ANY_SOURCE, const int& tag=MPI_ANY_TAG) {
         return receiveMultiple<T>(count, source, tag, lastStatus);
-    }
-
-    template<typename T>
-    T* receiveMultiple(const int& count, const int& source) {
-        return receiveMultiple<T>(count, source, (const int&) MPI_ANY_TAG, lastStatus);
-    }
-
-    template<typename T>
-    T* receiveMultiple(const int& count) {
-        return receiveMultiple<T>(count, (const int&) MPI_ANY_SOURCE, (const int&) MPI_ANY_TAG, lastStatus);
-    }
-
-    template<typename T>
-    T* receiveMultipleFrom(const int& count, const int& source, MPI_Status*& status) {
-        return receiveMultiple<T>(count, source, (const int&) MPI_ANY_TAG, status);
-    }
-
-    template<typename T>
-    T* receiveMultipleFrom(const int& count, const int& source) {
-        return receiveMultiple<T>(count, source, (const int&) MPI_ANY_TAG, lastStatus);
     }
 
     template<typename T>
