@@ -16,10 +16,12 @@ structure (moves `src/...` includes to just `...`), and zips it with the
 `packageRun.sh` script.
 * `packageRun.sh` turns into the `run.sh` script in the packaged project.
 Takes the number of processes as an argument.
+* `runDebug.sh` Finds all source files in the project, compiles, and runs them
+with debugging information through Valgrind. 
 
 ## Examples
 
-### Random Numbers (Default Source)
+### Random Numbers
 
 **C++**
 ```cpp
@@ -65,6 +67,21 @@ Random Table
 ├──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
 │ 1383 │ 1383 │  890 │ 1146 │ 1501 │  475 │ 1341 │ 1077 │  696 │  515 │  495 │ 1023 │ 1360 │  490 │  283 │ 1493 │
 └──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+```
+
+### Random Numbers (Wrapper Version)
+```cpp
+#include "src/mpiwrapper.hpp"
+
+int main(int argc, char** argv) {
+    MPIWrapper wrapper(argc, argv);
+    srand(wrapper.getRank());
+    int random_process_data = (rand() % (wrapper.getSize()*100));
+    debugh("Random Table");
+    wrapper.table(random_process_data, "random_process_data");
+    // Notice how there's no need for finalize.
+}
+
 ```
 
 ### Bitonic Sorting
